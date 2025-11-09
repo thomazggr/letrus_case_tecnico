@@ -28,6 +28,7 @@ Outros componentes:
 ---
 
 ## 📂 Estrutura de Arquivos
+```text
 letrus-data-case/ 
 ├── terraform/ 
 │ ├── modules/ 
@@ -52,7 +53,7 @@ letrus-data-case/
 │ ├── escolas.csv 
 │ └── notas.csv 
 └── README.md
-
+```
 ---
 
 ## 🛠️ Tecnologias Utilizadas
