@@ -19,6 +19,8 @@ resource "aws_subnet" "private" {
   tags = {
     Name = "${var.project_name}-private-subnet-${count.index + 1}"
   }
+  # Garantir que a VPC exista antes de criar subnets
+  depends_on = [aws_vpc.main]
 }
 
 # 3. S3 Gateway Endpoint (Permite que Glue e RDS acessem S3 de dentro da VPC)
@@ -26,6 +28,8 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.main.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
   route_table_ids   = [aws_route_table.private.id]
+  # As rotas/route table devem existir antes de criar o endpoint do S3
+  depends_on = [aws_route_table.private]
 }
 
 # 4. Glue Interface Endpoint (Permite que Glue acesse a API do Glue)
@@ -36,6 +40,8 @@ resource "aws_vpc_endpoint" "glue" {
   subnet_ids          = aws_subnet.private[*].id
   security_group_ids  = [aws_security_group.glue_sg.id]
   private_dns_enabled = true
+  # Endpoints de interface precisam das subnets e security group
+  depends_on = [aws_subnet.private, aws_security_group.glue_sg]
 }
 
 # 5. Roteamento para Subnets Privadas (necessário para o S3 Gateway)
@@ -50,6 +56,8 @@ resource "aws_route_table_association" "private" {
   count          = 2
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+  # Garantir que a route table e as subnets existam antes de associar
+  depends_on = [aws_route_table.private, aws_subnet.private]
 }
 
 # 6. Security Groups
