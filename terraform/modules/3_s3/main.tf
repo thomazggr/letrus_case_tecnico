@@ -63,12 +63,26 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encrypt" {
 }
 
 resource "null_resource" "execute_aws_cli_sync_glue_scripts" {
+  # Garantir que o bucket e suas configurações (bloqueio/criptografia) estejam aplicadas
+  depends_on = [
+    aws_s3_bucket.scripts_bucket,
+    aws_s3_bucket_server_side_encryption_configuration.encrypt["scripts"],
+    aws_s3_bucket_public_access_block.block["scripts"]
+  ]
+
   provisioner "local-exec" {
     command = "aws s3 sync ../glue_scripts/ s3://${aws_s3_bucket.scripts_bucket.bucket}/scripts/"
   }
 }
 
 resource "null_resource" "execute_aws_cli_sync_csvs" {
+  # Garantir que o bucket de dados e suas configurações (bloqueio/criptografia) estejam aplicadas
+  depends_on = [
+    aws_s3_bucket.data_bucket,
+    aws_s3_bucket_server_side_encryption_configuration.encrypt["data"],
+    aws_s3_bucket_public_access_block.block["data"]
+  ]
+
   provisioner "local-exec" {
     command = "aws s3 sync ../csv_exemplos/ s3://${aws_s3_bucket.data_bucket.bucket}/raw/"
   }
