@@ -23,6 +23,12 @@ resource "aws_rds_cluster" "aurora" {
   skip_final_snapshot             = true
   # Define o Secret Manager para armazenar a senha
   master_user_secret_kms_key_id   = aws_kms_key.aurora_secret.key_id
+  
+  # Garantir que o subnet group e a chave KMS existam antes de criar o cluster
+  depends_on = [
+    aws_db_subnet_group.aurora,
+    aws_kms_key.aurora_secret
+  ]
 }
 
 # 3. Instância do Cluster (apenas 1 para o teste)
@@ -32,6 +38,8 @@ resource "aws_rds_cluster_instance" "aurora" {
   instance_class     = "db.t3.medium" # Custo-benefício para testes
   engine             = aws_rds_cluster.aurora.engine
   engine_version     = aws_rds_cluster.aurora.engine_version
+  # As instâncias devem ser criadas somente após o cluster existir
+  depends_on = [aws_rds_cluster.aurora]
 }
 
 # 4. Chave KMS para criptografar o Secret
@@ -43,4 +51,6 @@ resource "aws_kms_key" "aurora_secret" {
 # Data source para obter o ARN do secret gerado
 data "aws_secretsmanager_secret" "aurora_credentials" {
   arn = aws_rds_cluster.aurora.master_user_secret[0].secret_arn
+  # Garantir que o cluster (que cria o secret) exista antes de ler o secret
+  depends_on = [aws_rds_cluster.aurora]
 }
