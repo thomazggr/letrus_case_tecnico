@@ -10,8 +10,10 @@ Centralizar dados acadêmicos em uma arquitetura simples e eficiente: um único 
 
 ```text
 ┌────────────┐    ┌──────────────┐    ┌──────────────────────────┐    ┌───────────────┐
-│ CSV Local  │──▶ │ S3 (raw)     │──▶ │ Glue Job único:          │──▶ │ S3 (processed)│
+│ CSV Local  │──▶│ S3 (raw)     │──▶ │ Glue Job único:          │──▶│ S3 (processed)│
 └────────────┘    └──────────────┘    │ etl_performance_academica│    └───────────────┘
+                                      └──────────────────────────┘
+                                         │
                                          │                         
                                          ▼
                                     ┌──────────────┐
@@ -34,6 +36,7 @@ letrus-data-case/
 │ │ ├── 3_s3/ 
 │ │ ├── 4_rds_aurora/ 
 │ │ └── 5_glue/ 
+│ ├── backend.tf
 │ ├── main.tf 
 │ ├── variables.tf 
 │ ├── outputs.tf 
@@ -81,7 +84,7 @@ key    = "global/terraform.tfstate"
 region = "us-east-1"
 ```
 
-Esse bucket precisa existir antes de executar `terraform init`. Abaixo há comandos AWS CLI (PowerShell) para criar o bucket, habilitar criptografia padrão.
+Esse bucket precisa existir antes de executar `terraform init`. Abaixo há comandos via AWS cli para criar o bucket, habilitar criptografia padrão.
 
 Observações rápidas:
 - Substitua `letrus-de-case-terraform-state` por um nome globalmente único se necessário.
@@ -101,7 +104,7 @@ Depois de criar o bucket continue os passos.
 ### 2. Deploy da Infraestrutura (Terraform)
 
 1. Clone este repositório.
-2. Preencha as variáveis (ex: `project_name` e `region`).
+2. Preencha as variáveis (ex: `project_name` e `region`, apesar de já estarem com valor default).
 3. Navegue até o diretório `terraform/` e execute:
 
     ```powershell
