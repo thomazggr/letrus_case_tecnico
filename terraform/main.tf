@@ -27,6 +27,8 @@ module "networking" {
 module "s3" {
   source       = "./modules/3_s3"
   project_name = var.project_name
+  # Garantir que a rede (VPC/Subnets) exista antes de criar buckets e endpoints
+  depends_on   = [module.networking]
 }
 
 # ----------------------------------------------------------------
@@ -40,6 +42,8 @@ module "rds_aurora" {
   vpc_id          = module.networking.vpc_id
   private_subnets = module.networking.private_subnets_ids
   aurora_sg_id    = module.networking.aurora_sg_id
+  # O cluster depende da configuração de rede e dos buckets estarem disponíveis (por precaução)
+  depends_on      = [module.networking, module.s3]
 }
 
 # ----------------------------------------------------------------
@@ -55,6 +59,8 @@ module "iam" {
   aws_account_id           = data.aws_caller_identity.current.account_id
   glue_connection_sg_id    = module.networking.glue_sg_id
   glue_connection_subnets  = module.networking.private_subnets_ids
+  # IAM depende de recursos de rede e dos buckets/secret para montar políticas corretamente
+  depends_on               = [module.networking, module.s3, module.rds_aurora]
 }
 
 # ----------------------------------------------------------------
@@ -70,6 +76,8 @@ module "glue" {
   aurora_secret_arn        = module.rds_aurora.secret_manager_arn
   glue_connection_subnets  = module.networking.private_subnets_ids
   glue_connection_sg_id    = module.networking.glue_sg_id
+  # Glue precisa que IAM (role), buckets, rede e RDS existam primeiro
+  depends_on               = [module.iam, module.s3, module.networking, module.rds_aurora]
 }
 
 # Data source para obter o Account ID
