@@ -27,18 +27,22 @@ resource "aws_iam_policy" "glue_policy" {
 resource "aws_iam_role_policy_attachment" "glue_policy_attach" {
   role       = aws_iam_role.glue_service_role.name
   policy_arn = aws_iam_policy.glue_policy.arn
+  # Garantir que role e policy existam antes de anexar
+  depends_on = [aws_iam_role.glue_service_role, aws_iam_policy.glue_policy]
 }
 
 # Anexa política gerenciada (para acesso ao Glue, S3, EC2 - este último para VPC)
 resource "aws_iam_role_policy_attachment" "glue_managed_policy_attach" {
   role       = aws_iam_role.glue_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  depends_on = [aws_iam_role.glue_service_role]
 }
 
 # Anexa política gerenciada (para acesso VPC do Glue Job)
 resource "aws_iam_role_policy_attachment" "glue_vpc_policy_attach" {
   role       = aws_iam_role.glue_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  depends_on = [aws_iam_role.glue_service_role]
 }
 
 
